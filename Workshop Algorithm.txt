@@ -1,0 +1,103 @@
+﻿ไฟล์นี้ฝั่ง hardware เขียนให้ฝั่ง software รู้ logic การทำงานของระบบอัตโนมัติ
+เพื่อให้ฝั่ง software เขียน logic นี้ลงบนเว็บได้
+โค๊ดนี้เป็นภาษา C ของ arduino เขียนลงบนตัวเว็บตรงๆไม่ได้นะครับ
+
+door
+
+#define DOOR_STATE_CLOSE              0
+#define DOOR_STATE_FORCED_CLOSE       1
+#define DOOR_STATE_PEOPLE_IN          2
+#define DOOR_STATE_PEOPLE_OUT         3
+#define DOOR_STATE_FORCED_OPEN        4
+#define DOOR_STATE_PEOPLE_IN_DONE     5
+#define DOOR_STATE_PEOPLE_OUT_DONE    6
+
+#define ULTRA_DELTA       	      10
+#define ULTRA_1_NORMAL    	      22
+#define ULTRA_2_NORMAL    	      22
+
+int ultra_distance_1; //อัลตราโซนิคตัวที่ 1 (หน้าบ้าน)
+int ultra_distance_2; //อัลตราโซนิคตัวที่ 2 (ในบ้าน)
+int peopleCount = 0; //จำนวนคน
+int doorState = DOOR_STATE_CLOSE;
+
+
+if(doorState == DOOR_STATE_CLOSE){
+      if(ULTRA_1_NORMAL - ultra_distance_1 >= ULTRA_DELTA){
+        doorState = DOOR_STATE_PEOPLE_IN;
+        doorOpen();
+      }
+      else if(ULTRA_2_NORMAL - ultra_distance_2 >= ULTRA_DELTA){
+        doorState = DOOR_STATE_PEOPLE_OUT;
+        doorOpen();
+      }
+} else if(doorState == DOOR_STATE_PEOPLE_IN){
+      if(ULTRA_2_NORMAL - ultra_distance_2 >= ULTRA_DELTA){
+        doorState = DOOR_STATE_PEOPLE_IN_DONE;
+        peopleCount++;
+        doorClose();
+      }
+} else if(doorState == DOOR_STATE_PEOPLE_OUT){
+      if(ULTRA_1_NORMAL - ultra_distance_1 >= ULTRA_DELTA){
+        doorState = DOOR_STATE_PEOPLE_OUT_DONE;
+        peopleCount--;
+        doorClose();
+      }
+} else if(doorState == DOOR_STATE_PEOPLE_IN_DONE || doorState == DOOR_STATE_PEOPLE_OUT_DONE){
+      if(ULTRA_1_NORMAL - ultra_distance_1 < ULTRA_DELTA && ULTRA_2_NORMAL - ultra_distance_2 < ULTRA_DELTA){
+        doorState = DOOR_STATE_CLOSE;
+      }
+}
+
+ถ้าสั่งแบบบังคับให้เปิดหรือปิดอย่างเดียวให้ doorState = DOOR_STATE_FORCED_OPEN หรือ DOOR_STATE_FORCED_CLOSE
+และถ้าจะปรับเป็น auto ให้ ปิดประตูก่อน แล้วให้ doorState = DOOR_STATE_CLOSE
+
+////////////////////////////////////////////////////////////////////////////////////
+
+LDR (ไฟหน้าบ้าน)
+
+
+#define FRONT_LIGHT_STATE_OFF         20
+#define FRONT_LIGHT_STATE_FORCED_OFF  21
+#define FRONT_LIGHT_STATE_ON          22
+#define FRONT_LIGHT_STATE_FORCED_ON   23
+
+#define LDR_TOGGLE        550
+
+int light; //ค่าจาก sensor LDR
+int frontLightState = FRONT_LIGHT_STATE_OFF;
+
+if(light < LDR_TOGGLE && frontLightState == FRONT_LIGHT_STATE_OFF){
+      frontLightState = FRONT_LIGHT_STATE_ON;
+      frontLightOn();
+} else if(light > LDR_TOGGLE && frontLightState == FRONT_LIGHT_STATE_ON){
+      frontLightState = FRONT_LIGHT_STATE_OFF;
+      frontLightOff();
+}
+
+ถ้าสั่งแบบบังคับให้เปิดหรือปิดอย่างเดียวให้ frontLightState = FRONT_LIGHT_STATE_FORCED_ON หรือ FRONT_LIGHT_STATE_FORCED_OFF
+และถ้าจะปรับเป็น auto ให้ ปิดไฟก่อน แล้วให้ frontLightState = FRONT_LIGHT_STATE_OFF
+
+//////////////////////////////////////////////////////////////////////////////////////
+DHT (อุณหภูมิ แอร์)
+
+#define AIR_STATE_OFF                 10
+#define AIR_STATE_FORCED_OFF          11
+#define AIR_STATE_ON                  12
+#define AIR_STATE_FORCED_ON           13
+
+#define AIR_TOGGLE_TEMP   27
+
+float temperature;
+int airState = AIR_STATE_OFF;
+
+if(temperature > AIR_TOGGLE_TEMP && airState == AIR_STATE_OFF){
+      airState = AIR_STATE_ON;
+      airOn();
+} else if(temperature < AIR_TOGGLE_TEMP && airState == AIR_STATE_ON){
+      airState = AIR_STATE_OFF;
+      airOff();
+}
+
+ถ้าสั่งแบบบังคับให้เปิดหรือปิดอย่างเดียวให้ airState = AIR_STATE_FORCED_ON หรือ AIR_STATE_FORCED_OFF
+และถ้าจะปรับเป็น auto ให้ ปิดแอร์ก่อน แล้วให้ airState = AIR_STATE_OFF
