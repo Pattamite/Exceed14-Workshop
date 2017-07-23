@@ -1,6 +1,5 @@
 #include <UnoWiFiDevEd.h>
 #include <Wire.h>
-#include <Servo.h>
 #include <dht.h>
 
 #define CONNECTOR         "rest" 
